@@ -64,20 +64,21 @@ void InitController(PID *pid, float initVr, float initTn, float initTv, float in
 
 float CalculateState(PID *pid, float Delta_T)
 {
+    // Calculate the difference between setpoint and plant state
     float e = pid->Setpoint - pid->Feedback;
-    // Modifizierter Digitaler PID-Regler mit dem realen PID(T1)-Regler als Vorbild
-    pid->pidI = pid->pidI + pid->Deviation * Delta_T / pid->Tn;                                 // naeherungsweise integrieren
-    pid->pidD = (e - pid->Deviation) * (pid->Tv/pid->Tr1) + exp(- Delta_T / pid->Tr1) *pid->pidD; // naeherungsweise Differenzieren
-    pid->pidP = 1.0 * e;                // P-Pfad
+    
 
-    // Berechnung der Stellgroesse
+    pid->pidI = pid->pidI + pid->Deviation * Delta_T / pid->Tn; // Integral Value
+    pid->pidD = (e - pid->Deviation) * (pid->Tv/pid->Tr1) + exp(- Delta_T / pid->Tr1) *pid->pidD; // Differentiator Value
+    pid->pidP = 1.0f * e; // Gain Value
+
+    // Calculate the Output Value
     pid->Output = pid->Vr * (pid->pidP+ pid->pidI + pid->pidD);
 
-    // Speicherung der aktuellen Werte fuer den naechsten Aufruf der PID-Routine
-    // DT1_alt=DT1;
+    // Update the values
     pid->Deviation = e;
     pid->Feedback = pid->Output;
-    // I_alt=I;
+
     return pid->Output;
 
 }
