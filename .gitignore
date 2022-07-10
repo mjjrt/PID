@@ -1,0 +1,9 @@
+build/
+build/
+*vscode*
+
+*.exe
+main
+PIDmain
+*.o
+*.out
