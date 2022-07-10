@@ -4,14 +4,14 @@ OBJ =main.o
 SRC =main.c
 OUT =PIDmain
 
-CFLAGS =-Wall -Werror -pedantic -ggdb
-LIBS =-lm
+CFLAGS =-std=c11 -Wall -Werror -pedantic
+#LIBS =-lm
 
 all: $(OBJ)
-	$(CC) $(CFLAGS) $(LIBS) $(OBJ) -o $(OUT)
+	$(CC) $(CFLAGS) $(OBJ) -o $(OUT) -lm
 
 $(OBJ): $(SRC)
-	$(CC) $(CFLAGS) -c $(SRC)
+	$(CC) $(CFLAGS) -c $(SRC) -lm
 
 clean:
 	rm -rf *.o *.exe *.out main $(OUT) 
