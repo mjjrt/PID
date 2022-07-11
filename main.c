@@ -107,12 +107,20 @@ int main(int argc, char** argv)
 
     InitController(&pid, initVr, initTn, initTv, initTr1, 1.0f);
     
-    int cycles = 100;
+#define MAX_CYCLES 100
+	int cycles = MAX_CYCLES;
     float deltat = 0.01f;
-    while(cycles > 0)
+    
+	FILE* fp;
+	fp = fopen("output.csv", "w");
+	fprintf(fp, "Cycle, Output\n");
+	while(cycles > 0)
     {
-        printf("%f\n", FeedbackLoop(&pid, deltat));
-        cycles--;
+        /* printf("%f\n", FeedbackLoop(&pid, deltat)); */
+        fprintf(fp, "%d, %.3f\n", MAX_CYCLES - cycles,  FeedbackLoop(&pid, deltat));
+		cycles--;
     }
+
+	fclose(fp);
     return 0;
 }

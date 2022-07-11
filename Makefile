@@ -9,6 +9,10 @@ CFLAGS =-std=c11 -Wall -Werror -pedantic
 
 all: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(OUT) -lm
+	rm -rf *.o 
+
+run: all
+	./PIDmain 1 1 1 1
 
 $(OBJ): $(SRC)
 	$(CC) $(CFLAGS) -c $(SRC) -lm
