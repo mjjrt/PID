@@ -7,3 +7,5 @@ main
 PIDmain
 *.o
 *.out
+*.csv
+
