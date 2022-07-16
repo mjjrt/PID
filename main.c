@@ -3,20 +3,23 @@
 #include <math.h>
 #include <complex.h>
 
+
+// PID Controller Transfer Function
+// G = Vr * (1 + 1/Tn*s + (Tv*s+1)/(Tr1s + 1))
 typedef struct PID{
-    float Vr;
-    float Tn;
-    float Tv;
-    float Tr1;
+    float Vr;   // Common Controller Gain
+    float Tn;   // Integral Time Constant
+    float Tv;   // Derivative Time Constant
+    float Tr1;  // Parasitic Time Constant
 
-    float pidP;
-    float pidI;
-    float pidD;
+    float pidP; // Gain Output
+    float pidI; // Integral Term Output
+    float pidD; // Derivative Term Output
 
-    float Deviation;
-    float Setpoint;
-    float Output;
-    float Feedback;
+    float Deviation;    // Deviation from Setpoint
+    float Setpoint;     // Setpoint 
+    float Output;       // Controller Output
+    float Feedback;     // Feedback from Sensor
 }PID;
 
 float CalculateState(PID *pid, float Delta_T);
@@ -66,14 +69,13 @@ float CalculateState(PID *pid, float Delta_T)
 {
     // Calculate the difference between setpoint and plant state
     float e = pid->Setpoint - pid->Feedback;
-    
 
-    pid->pidI = pid->pidI + pid->Deviation * Delta_T / pid->Tn; // Integral Value
-    pid->pidD = (e - pid->Deviation) * (pid->Tv/pid->Tr1) + exp(- Delta_T / pid->Tr1) *pid->pidD; // Differentiator Value
+    pid->pidI = pid->Deviation * Delta_T / pid->Tn; // Integral Value
+    pid->pidD = pid->Deviation * (pid->Tv/pid->Tr1) + exp(- Delta_T / pid->Tr1) * pid->pidD; // Differentiator Value
     pid->pidP = 1.0f * e; // Gain Value
 
     // Calculate the Output Value
-    pid->Output = pid->Vr * (pid->pidP+ pid->pidI + pid->pidD);
+    pid->Output = pid->Vr * (pid->pidP + pid->pidI + pid->pidD);
 
     // Update the values
     pid->Deviation = e;
@@ -83,10 +85,17 @@ float CalculateState(PID *pid, float Delta_T)
 
 }
 
+
+float Plant(float input)
+{
+    float output = input;
+    return output;
+}
+
 float FeedbackLoop(PID *pid, float deltat)
 {
     CalculateState(pid, deltat);
-    return pid->Output;
+    return Plant(pid->Output);
 }
 
 int main(int argc, char** argv)
@@ -107,17 +116,17 @@ int main(int argc, char** argv)
 
     InitController(&pid, initVr, initTn, initTv, initTr1, 1.0f);
     
-#define MAX_CYCLES 100
+#define MAX_CYCLES 1000
 	int cycles = MAX_CYCLES;
-    float deltat = 0.01f;
+    float deltat = 0.001f;
     
 	FILE* fp;
 	fp = fopen("output.csv", "w");
-	fprintf(fp, "Cycle, Output\n");
+	fprintf(fp, "Cycle, Time, Output\n");
 	while(cycles > 0)
     {
         /* printf("%f\n", FeedbackLoop(&pid, deltat)); */
-        fprintf(fp, "%d, %.3f\n", MAX_CYCLES - cycles,  FeedbackLoop(&pid, deltat));
+        fprintf(fp, "%d, %.3f, %.3f\n", MAX_CYCLES - cycles, deltat*(MAX_CYCLES-cycles), FeedbackLoop(&pid, deltat));
 		cycles--;
     }
 

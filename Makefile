@@ -18,4 +18,4 @@ $(OBJ): $(SRC)
 	$(CC) $(CFLAGS) -c $(SRC) -lm
 
 clean:
-	rm -rf *.o *.exe *.out main $(OUT) 
+	rm -rf *.o *.exe *.out main $(OUT) *.csv
