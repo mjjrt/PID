@@ -70,32 +70,36 @@ float CalculateState(PID *pid, float Delta_T)
     // Calculate the difference between setpoint and plant state
     float e = pid->Setpoint - pid->Feedback;
 
-    pid->pidI = pid->Deviation * Delta_T / pid->Tn; // Integral Value
-    pid->pidD = pid->Deviation * (pid->Tv/pid->Tr1) + exp(- Delta_T / pid->Tr1) * pid->pidD; // Differentiator Value
     pid->pidP = 1.0f * e; // Gain Value
-
+    pid->pidI = pid->pidI + e * Delta_T / pid->Tn; // Integral Value
+    pid->pidD = (e - pid->Deviation) * (pid->Tv/pid->Tr1) + exp(- Delta_T / pid->Tr1) * pid->pidD; // Differentiator Value
     // Calculate the Output Value
     pid->Output = pid->Vr * (pid->pidP + pid->pidI + pid->pidD);
 
     // Update the values
     pid->Deviation = e;
-    pid->Feedback = pid->Output;
 
     return pid->Output;
 
 }
 
+typedef struct Plant{
+    float state;
+}Plant;
 
-float Plant(float input)
+float PlantUpdate(Plant *p, float input)
 {
-    float output = input;
+    float output = p->state + input*0.5f;
+    p->state = output;
     return output;
 }
 
-float FeedbackLoop(PID *pid, float deltat)
+float FeedbackLoop(PID *pid, Plant *p, float deltat)
 {
     CalculateState(pid, deltat);
-    return Plant(pid->Output);
+    float output = PlantUpdate(p, pid->Output);
+    pid->Feedback = output;
+    return output;
 }
 
 int main(int argc, char** argv)
@@ -112,21 +116,24 @@ int main(int argc, char** argv)
     float initTr1 = atof(argv[4]);
 
     PID pid;
+    Plant plant;
+    plant.state = 0;
+
     ResetController(&pid);
 
     InitController(&pid, initVr, initTn, initTv, initTr1, 1.0f);
     
 #define MAX_CYCLES 1000
 	int cycles = MAX_CYCLES;
-    float deltat = 0.001f;
+    float deltat = 0.0001f;
     
 	FILE* fp;
 	fp = fopen("output.csv", "w");
-	fprintf(fp, "Cycle, Time, Output\n");
+	fprintf(fp, "Cycle, Time, Deviation, Controller Output, Output\n");
 	while(cycles > 0)
     {
         /* printf("%f\n", FeedbackLoop(&pid, deltat)); */
-        fprintf(fp, "%d, %.3f, %.3f\n", MAX_CYCLES - cycles, deltat*(MAX_CYCLES-cycles), FeedbackLoop(&pid, deltat));
+        fprintf(fp, "%d, %.3f, %.3f, %.3f, %.3f\n", MAX_CYCLES - cycles, deltat*(MAX_CYCLES-cycles), pid.Deviation, pid.Output, FeedbackLoop(&pid, &plant, deltat));
 		cycles--;
     }
 
